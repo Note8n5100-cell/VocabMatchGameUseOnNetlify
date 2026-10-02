@@ -22,7 +22,7 @@
 <script type="text/babel">
 const {useState,useEffect,useRef}=React;
 
-const DEFAULT=[["apple","蘋果","🍎"],["banana","香蕉","🍌"],["cat","貓","🐱"],["dog","狗","🐶"],["bird","鳥","🐦"],["fish","魚","🐟"],["egg","蛋","🥚"],["milk","牛奶","🥛"],["book","書","📖"],["pen","筆","🖊️"],["bag","書包","🎒"],["red","紅色","🟥"],["blue","藍色","🟦"],["yellow","黃色","🟨"],["one","一","1️⃣"],["two","二","2️⃣"]].map(([en,zh,icon])=>({en,zh,icon}));
+const DEFAULT=[["apple","蘋果","🍎"],["bird","鳥","🐦"],["fish","魚","🐟"],["egg","蛋","🥚"],["milk","牛奶","🥛"],["book","書","📖"],["pen","筆","🖊️"],["bag","書包","🎒"],["red","紅色","🟥"],["blue","藍色","🟦"],["yellow","黃色","🟨"],["one","一","1️⃣"],["two","二","2️⃣"]].map(([en,zh,icon])=>({en,zh,icon}));
 const ICONS={three:"3️⃣",four:"4️⃣",five:"5️⃣",green:"🟩",black:"⬛",white:"⬜",water:"💧",sun:"☀️",moon:"🌙",star:"⭐",ball:"⚽",car:"🚗",house:"🏠",tree:"🌳",happy:"😀",sad:"😢"};
 DEFAULT.forEach(w=>ICONS[w.en]=w.icon);
 const guess=en=>ICONS[en.trim().toLowerCase()]||"🔤";
