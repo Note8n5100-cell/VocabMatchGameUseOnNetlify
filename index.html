@@ -41,8 +41,9 @@ function play(texts,{lang,rate,loop}={}){
   const next=()=>{
     if(my!==token)return;
     if(i>=texts.length){if(!loop)return;i=0;return setTimeout(next,500)}
-    const u=new SpeechSynthesisUtterance(texts[i++]);u.lang=lang;u.rate=rate;
-    const v=speechSynthesis.getVoices().find(v=>v.lang.replace("_","-").startsWith(lang.slice(0,2)));
+    const t=texts[i++],L=/[\u3040-\u30ff]/.test(t)?"ja-JP":/[\uac00-\ud7af]/.test(t)?"ko-KR":lang;
+    const u=new SpeechSynthesisUtterance(t);u.lang=L;u.rate=rate;
+    const v=speechSynthesis.getVoices().find(v=>v.lang.replace("_","-").startsWith(L.slice(0,2)));
     if(v)u.voice=v;u.onend=next;u.onerror=()=>{};speechSynthesis.speak(u);
   };
   setTimeout(next,60);
