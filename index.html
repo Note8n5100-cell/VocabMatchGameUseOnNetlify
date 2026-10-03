@@ -107,7 +107,7 @@ function App(){
 
   const start=()=>run(s1,s2);
   const next=()=>{
-    if(mode!=="seq")return run(0,0,true);
+    if(mode==='rand')return run(s1,s2,true);
     const n=Math.abs(s2-s1)+1,a=Math.min(s1,s2)+n;
     if(a>words.length)return alert("已經是最後一個回合了");
     const b=Math.min(a+n-1,words.length);
