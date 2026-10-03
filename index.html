@@ -74,7 +74,7 @@ function App(){
   const [s1,setS1]=useState(1),[s2,setS2]=useState(10);
   const [showEn,setShowEn]=useState(true),[showZh,setShowZh]=useState(true);
   const [langL,setLangL]=useState("🇬🇧 英語"),[speedL,setSpeedL]=useState("不調整");
-  const [fsEn,setFsEn]=useState(40),[fsZh,setFsZh]=useState(40);
+  const [fsEn,setFsEn]=useState(20),[fsZh,setFsZh]=useState(16);
   const [open,setOpen]=useState(false);
   const [g,setG]=useState(null);
   const [shake,setShake]=useState(false);
@@ -85,16 +85,33 @@ function App(){
   useEffect(()=>{if(balloons){const t=setTimeout(()=>setBalloons(0),3200);return()=>clearTimeout(t)}},[balloons]);
   useEffect(()=>{speechSynthesis.getVoices()},[]);
 
-  const start=()=>{
+  const hist=useRef([]);
+  const wk=w=>w.en+"|"+w.zh;
+  const run=(sa,sb,avoid)=>{
     if(!words.length)return;
     let ch;
     if(mode==="seq"){
-      const a=Math.max(1,Math.min(s1,s2)),b=Math.min(words.length,Math.max(s1,s2));
+      const a=Math.max(1,Math.min(sa,sb)),b=Math.min(words.length,Math.max(sa,sb));
       ch=words.slice(a-1,b);if(!ch.length)ch=words.slice(0,1);
-    }else ch=shuffle(words).slice(0,Math.min(np,words.length));
+    }else{
+      const sc=w=>{const k=wk(w);return hist.current[0]&&hist.current[0].includes(k)?2:hist.current[1]&&hist.current[1].includes(k)?1:0};
+      let pool=shuffle(words);
+      if(avoid)pool=pool.sort((a,b)=>sc(a)-sc(b));
+      ch=pool.slice(0,Math.min(np,words.length));
+    }
+    hist.current=[ch.map(wk),...hist.current].slice(0,2);
     const idx=ch.map((_,i)=>i),sh=a=>mode==="seq"?a:shuffle(a);
     speechSynthesis.cancel();token++;
     setG({pairs:ch,lo:sh(idx),ro:sh(idx),matched:[],selL:null,selR:null,wrongMsg:"",wL:null,wR:null,score:0,attempts:0});
+  };
+
+  const start=()=>run(s1,s2);
+  const next=()=>{
+    if(mode!=="seq")return run(0,0,true);
+    const n=Math.abs(s2-s1)+1,a=Math.min(s1,s2)+n;
+    if(a>words.length)return alert("已經是最後一個回合了");
+    const b=Math.min(a+n-1,words.length);
+    setS1(a);setS2(b);run(a,b);
   };
 
   const pick=(side,i)=>{
@@ -194,6 +211,7 @@ function App(){
         <label className="block"><input type="checkbox" checked={showZh} onChange={e=>setShowZh(e.target.checked)}/> 顯示中文翻譯</label>
         <div className="flex gap-2 mb-3">
           <button onClick={start} className="rounded bg-red-500 px-4 py-2 font-bold text-white">🔄 開始新回合</button>
+          {g&&<button onClick={next} className="rounded bg-blue-500 px-4 py-2 font-bold text-white">⏭️ 下個回合</button>}
         </div>
         <div className="flex flex-wrap gap-4 items-center mb-4">
           <b>🔊 發音</b>
@@ -205,8 +223,8 @@ function App(){
           <p className="mb-2">進度：{g.matched.length} / {total} 組　｜　<span className="font-bold text-blue-600">答對次數：{g.score}</span>　｜　<span className="font-bold text-red-600">嘗試次數：{g.attempts}</span></p>
           {g.wrongMsg&&<div className="mb-3 rounded-2xl bg-red-500 p-3 text-center text-3xl md:text-5xl font-black text-white">{g.wrongMsg}</div>}
           <div className="grid grid-cols-[5fr_1fr_5fr] gap-x-1 items-center">
-            <div><h3 className="text-xl font-bold">🔤 English</h3><label className="flex items-center gap-2 text-sm">字體大小<input type="range" className="flex-1" min={16} max={96} value={fsEn} onChange={e=>setFsEn(+e.target.value)}/>{fsEn}</label></div><div/>
-            <div><h3 className="text-xl font-bold">🀄 中文</h3><label className="flex items-center gap-2 text-sm">字體大小<input type="range" className="flex-1" min={16} max={96} value={fsZh} onChange={e=>setFsZh(+e.target.value)}/>{fsZh}</label></div>
+            <div><h3 className="text-xl font-bold">🔤 English</h3><label className="flex items-center gap-2 text-sm">字體<input type="range" className="flex-1" min={16} max={96} value={fsEn} onChange={e=>setFsEn(+e.target.value)}/>{fsEn}</label></div><div/>
+            <div><h3 className="text-xl font-bold">🀄 中文</h3><label className="flex items-center gap-2 text-sm">字體<input type="range" className="flex-1" min={16} max={96} value={fsZh} onChange={e=>setFsZh(+e.target.value)}/>{fsZh}</label></div>
           </div>
           <div className="space-y-1">
             {g.lo.map((li,row)=>{
