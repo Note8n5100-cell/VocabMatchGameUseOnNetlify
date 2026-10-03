@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>中英單字連連看xxx</title>
+<title>中英單字連連看</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
 <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
@@ -22,12 +22,12 @@
 <script type="text/babel">
 const {useState,useEffect,useRef}=React;
 
-const DEFAULT=[["apple","蘋果","🍎"],["bird","鳥","🐦"],["fish","魚","🐟"],["egg","蛋","🥚"],["milk","牛奶","🥛"],["book","書","📖"],["pen","筆","🖊️"],["bag","書包","🎒"],["red","紅色","🟥"],["blue","藍色","🟦"],["yellow","黃色","🟨"],["one","一","1️⃣"],["two","二","2️⃣"]].map(([en,zh,icon])=>({en,zh,icon}));
+const DEFAULT=[["apple","蘋果","🍎"],["banana","香蕉","🍌"],["cat","貓","🐱"],["dog","狗","🐶"],["bird","鳥","🐦"],["fish","魚","🐟"],["egg","蛋","🥚"],["milk","牛奶","🥛"],["book","書","📖"],["pen","筆","🖊️"],["bag","書包","🎒"],["red","紅色","🟥"],["blue","藍色","🟦"],["yellow","黃色","🟨"],["one","一","1️⃣"],["two","二","2️⃣"]].map(([en,zh,icon])=>({en,zh,icon}));
 const ICONS={three:"3️⃣",four:"4️⃣",five:"5️⃣",green:"🟩",black:"⬛",white:"⬜",water:"💧",sun:"☀️",moon:"🌙",star:"⭐",ball:"⚽",car:"🚗",house:"🏠",tree:"🌳",happy:"😀",sad:"😢"};
 DEFAULT.forEach(w=>ICONS[w.en]=w.icon);
 const guess=en=>ICONS[en.trim().toLowerCase()]||"🔤";
 const LANGS={"🇬🇧 英語":"en-US","🇯🇵 日語":"ja-JP","🇰🇷 韓語":"ko-KR","🇻🇳 越南語":"vi-VN"};
-const SPEEDS={"正常速度":1,"慢速":0.7,"更慢速":0.45};
+const SPEEDS={"不調整":1,"慢速":0.7,"更慢速":0.45};
 const KEY="vocab_game_v1";
 const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 
@@ -73,7 +73,7 @@ function App(){
   const [np,setNp]=useState(10);
   const [s1,setS1]=useState(1),[s2,setS2]=useState(10);
   const [showEn,setShowEn]=useState(true),[showZh,setShowZh]=useState(true);
-  const [langL,setLangL]=useState("🇬🇧 英語"),[speedL,setSpeedL]=useState("正常速度");
+  const [langL,setLangL]=useState("🇬🇧 英語"),[speedL,setSpeedL]=useState("不調整");
   const [open,setOpen]=useState(false);
   const [g,setG]=useState(null);
   const [shake,setShake]=useState(false);
@@ -182,7 +182,7 @@ function App(){
       <div className="mx-auto max-w-6xl p-4">
         <div className="flex items-center gap-3 mb-3">
           <button onClick={()=>setOpen(true)} className="border rounded px-3 py-1 bg-white">☰ 單字管理</button>
-          <h1 className="text-xl md:text-3xl font-black">🎮 全宇宙最強的中英單字猜猜看遊戲</h1>
+          <h1 className="text-xl md:text-3xl font-black">🎮 中英單字猜猜猜</h1>
         </div>
 
         <div className="grid md:grid-cols-[1fr_3fr] gap-3 mb-2">
@@ -203,10 +203,10 @@ function App(){
             )}
           </div>
         </div>
-        <label className="block"><input type="checkbox" checked={showEn} onChange={e=>setShowEn(e.target.checked)}/> 👀 顯示英文單字文字（取消勾選只顯示🔊，考驗聽音辨義）</label>
-        <label className="block"><input type="checkbox" checked={showZh} onChange={e=>setShowZh(e.target.checked)}/> 👀 顯示中文翻譯（取消勾選只顯示圖案）</label>
+        <label className="block"><input type="checkbox" checked={showEn} onChange={e=>setShowEn(e.target.checked)}/> 顯示英文單字</label>
+        <label className="block"><input type="checkbox" checked={showZh} onChange={e=>setShowZh(e.target.checked)}/> 顯示中文翻譯</label>
         <div className="flex flex-wrap gap-4 items-center my-2">
-          <b>🔊 發音設定</b>
+          <b>🔊 發音</b>
           <select className="border rounded px-2 py-1" value={langL} onChange={e=>setLangL(e.target.value)}>{Object.keys(LANGS).map(k=><option key={k}>{k}</option>)}</select>
           {Object.keys(SPEEDS).map(k=><label key={k}><input type="radio" checked={speedL===k} onChange={()=>setSpeedL(k)}/> {k}</label>)}
         </div>
