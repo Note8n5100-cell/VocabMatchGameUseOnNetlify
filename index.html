@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>單字猜猜看</title>
+<title>中英單字猜猜看</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
 <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
@@ -85,21 +85,26 @@ function App(){
   useEffect(()=>{if(balloons){const t=setTimeout(()=>setBalloons(0),3200);return()=>clearTimeout(t)}},[balloons]);
   useEffect(()=>{speechSynthesis.getVoices()},[]);
 
-  const hist=useRef([]);
+  const seen=useRef(new Set());
   const wk=w=>w.en+"|"+w.zh;
+  useEffect(()=>{seen.current=new Set()},[words]);
   const run=(sa,sb,avoid)=>{
     if(!words.length)return;
-    let ch;
+    let ch,wrapped=false;
     if(mode==="seq"){
       const a=Math.max(1,Math.min(sa,sb)),b=Math.min(words.length,Math.max(sa,sb));
       ch=words.slice(a-1,b);if(!ch.length)ch=words.slice(0,1);
     }else{
-      const sc=w=>{const k=wk(w);return hist.current[0]&&hist.current[0].includes(k)?2:hist.current[1]&&hist.current[1].includes(k)?1:0};
-      let pool=shuffle(words);
-      if(avoid)pool=pool.sort((a,b)=>sc(a)-sc(b));
-      ch=pool.slice(0,Math.min(np,words.length));
+      const cnt=Math.min(np,words.length),pool=shuffle(words);
+      if(avoid){
+        // 只從「之前所有回合都沒出現過」的單字挑；全部出完了才重新循環
+        const fresh=pool.filter(w=>!seen.current.has(wk(w)));
+        if(fresh.length>=cnt)ch=fresh.slice(0,cnt);
+        else{ch=fresh.concat(pool.filter(w=>seen.current.has(wk(w)))).slice(0,cnt);wrapped=true}
+      }else ch=pool.slice(0,cnt);
     }
-    hist.current=[ch.map(wk),...hist.current].slice(0,2);
+    if(wrapped)seen.current=new Set();
+    ch.forEach(w=>seen.current.add(wk(w)));
     const idx=ch.map((_,i)=>i),sh=a=>mode==="seq"?a:shuffle(a);
     speechSynthesis.cancel();token++;
     setG({pairs:ch,lo:sh(idx),ro:sh(idx),matched:[],selL:null,selR:null,wrongMsg:"",wL:null,wR:null,score:0,attempts:0});
