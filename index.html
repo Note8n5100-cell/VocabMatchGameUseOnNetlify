@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>中英單字連連看</title>
+<title>中英單字猜猜看</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
 <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
@@ -78,7 +78,6 @@ function App(){
   const [g,setG]=useState(null);
   const [shake,setShake]=useState(false);
   const [balloons,setBalloons]=useState(0);
-  const [form,setForm]=useState({en:"",zh:"",icon:""});
   const opt={lang:LANGS[langL],rate:SPEEDS[speedL]};
 
   useEffect(()=>{if(g&&g.wrongMsg){const t=setTimeout(()=>setG(p=>({...p,wrongMsg:""})),1500);return()=>clearTimeout(t)}},[g&&g.wrongMsg]);
@@ -129,16 +128,11 @@ function App(){
     };
     r.readAsText(f,"utf-8");
   };
-  const exportFile=()=>{
-    const a=document.createElement("a");
-    a.href=URL.createObjectURL(new Blob([JSON.stringify(words,null,2)],{type:"application/json"}));
-    a.download=store.current;a.click();
-  };
-  const addWord=e=>{
-    e.preventDefault();
-    if(!form.en.trim()||!form.zh.trim())return alert("請同時輸入英文單字與中文意思");
-    setWords([{en:form.en.trim(),zh:form.zh.trim(),icon:form.icon.trim()||guess(form.en)},...words]);
-    setForm({en:"",zh:"",icon:""});
+  const delFile=()=>{
+    const n=store.current,names=Object.keys(store.files);
+    if(!confirm(`確定要刪除單字檔「${n}」嗎？（共 ${words.length} 個單字，刪除後無法復原）`+(names.length===1?"\n這是最後一個單字檔，刪除後會重新建立預設的 words.json。":"")))return;
+    const rest={...store.files};delete rest[n];const keys=Object.keys(rest).sort();
+    setStore(keys.length?{current:keys[0],files:rest}:{current:"words.json",files:{"words.json":DEFAULT}});setG(null);
   };
   const del=i=>{const w=words[i];if(confirm(`確定要刪除「${w.icon} ${w.en} / ${w.zh}」這個單字嗎？`))setWords(words.filter((_,k)=>k!==i))};
 
@@ -157,18 +151,10 @@ function App(){
         </select>
         <hr className="my-3"/>
         <div className="flex gap-2 items-center">
-          <button onClick={exportFile} className="border rounded px-2 py-1">⬇️ 匯出</button>
+          <button onClick={delFile} className="border rounded px-2 py-1 text-red-600">🗑️ 刪除</button>
           <label className="border rounded px-2 py-1 cursor-pointer">⬆️ 匯入<input type="file" accept=".json" hidden onChange={importFile}/></label>
         </div>
         <p className="text-xs text-slate-500 mt-1">匯入會依上傳檔名存成單字檔（格式：[{`{"en","zh","icon"}`}]）</p>
-        <hr className="my-3"/>
-        <form onSubmit={addWord} className="space-y-1">
-          <div className="font-semibold">➕ 新增單字</div>
-          <input className={inp} placeholder="英文單字" value={form.en} onChange={e=>setForm({...form,en:e.target.value})}/>
-          <input className={inp} placeholder="中文意思" value={form.zh} onChange={e=>setForm({...form,zh:e.target.value})}/>
-          <input className={inp} placeholder="圖案 emoji（可留空自動猜）" value={form.icon} onChange={e=>setForm({...form,icon:e.target.value})}/>
-          <button className="border rounded px-2 py-1 bg-slate-100">加入單字</button>
-        </form>
         <hr className="my-3"/>
         <div className="font-semibold">🗒️ 單字清單（{words.length} 個，{store.current}）</div>
         <div className="mt-1">
