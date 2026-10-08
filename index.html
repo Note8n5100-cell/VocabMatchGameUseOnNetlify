@@ -35,13 +35,15 @@ const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math
 const loadStore=()=>{try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.files&&s.files[s.current])return s}catch(e){}return{current:"words.json",files:{"words.json":DEFAULT}}};
 
 // 發音：改用瀏覽器內建語音（取代 gTTS），loop=true 會反覆播放
-let token=0;
+let token=0,last=null;
 function play(texts,{lang,rate,loop}={}){
   const my=++token;speechSynthesis.cancel();let i=0;
+  const st=last={texts,loop,my,i:0,done:false};
   const next=()=>{
     if(my!==token)return;
-    if(i>=texts.length){if(!loop)return;i=0;return setTimeout(next,500)}
+    if(i>=texts.length){if(!loop){st.done=true;return}i=0;st.i=0;return setTimeout(next,500)}
     const t=texts[i++],L=/[\u3040-\u30ff]/.test(t)?"ja-JP":/[\uac00-\ud7af]/.test(t)?"ko-KR":lang;
+    st.i=i;
     const u=new SpeechSynthesisUtterance(t);u.lang=L;u.rate=rate;
     const v=speechSynthesis.getVoices().find(v=>v.lang.replace("_","-").startsWith(L.slice(0,2)));
     if(v)u.voice=v;u.onend=next;u.onerror=()=>{};speechSynthesis.speak(u);
@@ -84,6 +86,11 @@ function App(){
   useEffect(()=>{if(g&&g.wrongMsg){const t=setTimeout(()=>setG(p=>({...p,wrongMsg:""})),1500);return()=>clearTimeout(t)}},[g&&g.wrongMsg]);
   useEffect(()=>{if(balloons){const t=setTimeout(()=>setBalloons(0),3200);return()=>clearTimeout(t)}},[balloons]);
   useEffect(()=>{speechSynthesis.getVoices()},[]);
+  // 調整發音語言/速度時，若正在發音就立刻用新設定重播目前這個單字
+  useEffect(()=>{
+    if(last&&last.my===token&&!last.done)
+      play(last.texts.slice(Math.max(0,last.i-1)),{lang:LANGS[langL],rate:SPEEDS[speedL],loop:last.loop});
+  },[langL,speedL]);
 
   const seen=useRef(new Set());
   const wk=w=>w.en+"|"+w.zh;
