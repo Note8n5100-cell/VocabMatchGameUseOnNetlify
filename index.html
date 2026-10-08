@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>中英單字來猜猜看</title>
+<title>中英單字猜猜看</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
 <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
@@ -90,27 +90,31 @@ function App(){
   useEffect(()=>{seen.current=new Set()},[words]);
   const run=(sa,sb,avoid)=>{
     if(!words.length)return;
-    let ch,wrapped=false;
+    let ch;
     if(mode==="seq"){
       const a=Math.max(1,Math.min(sa,sb)),b=Math.min(words.length,Math.max(sa,sb));
       ch=words.slice(a-1,b);if(!ch.length)ch=words.slice(0,1);
     }else{
       const cnt=Math.min(np,words.length),pool=shuffle(words);
       if(avoid){
-        // 只從「之前所有回合都沒出現過」的單字挑；全部出完了才重新循環
+        // 只從「之前所有回合都沒出現過」的單字挑；不夠一回合就只出剩下的，不補舊單字
         const fresh=pool.filter(w=>!seen.current.has(wk(w)));
-        if(fresh.length>=cnt)ch=fresh.slice(0,cnt);
-        else{ch=fresh.concat(pool.filter(w=>seen.current.has(wk(w)))).slice(0,cnt);wrapped=true}
-      }else ch=pool.slice(0,cnt);
+        if(!fresh.length)return alert("所有單字都出完了！請按「🔄 開始新回合」重新開始。");
+        ch=fresh.slice(0,cnt);
+      }else{ch=pool.slice(0,cnt);seen.current=new Set()}
     }
-    if(wrapped)seen.current=new Set();
     ch.forEach(w=>seen.current.add(wk(w)));
     const idx=ch.map((_,i)=>i),sh=a=>mode==="seq"?a:shuffle(a);
     speechSynthesis.cancel();token++;
     setG({pairs:ch,lo:sh(idx),ro:sh(idx),matched:[],selL:null,selR:null,wrongMsg:"",wL:null,wR:null,score:0,attempts:0});
   };
 
-  const start=()=>run(s1,s2);
+  const start=()=>{
+    if(mode!=="seq")return run(s1,s2);
+    // 順序排序：重新開始 = 清掉出題記錄，回到第 1 題到第 10 題
+    const n=10;
+    seen.current=new Set();setS1(1);setS2(Math.min(n,words.length));run(1,n);
+  };
   const next=()=>{
     if(mode==='rand')return run(s1,s2,true);
     const n=Math.abs(s2-s1)+1,a=Math.min(s1,s2)+n;
@@ -181,7 +185,7 @@ function App(){
         <hr className="my-3"/>
         <div className="font-semibold">🗒️ 單字清單（{words.length} 個，{store.current}）</div>
         <div className="mt-1">
-          {words.map((w,i)=><div key={i} className="flex justify-between items-center leading-tight"><span>{w.icon} {w.en}</span><button onClick={()=>del(i)} className="text-xs px-1">🗑️</button></div>)}
+          {words.map((w,i)=><div key={i} className="flex justify-between items-center leading-tight"><span>{i+1}. {w.icon} {w.en}</span><button onClick={()=>del(i)} className="text-xs px-1">🗑️</button></div>)}
         </div>
         <hr className="my-3"/>
         <button className="border rounded px-2 py-1" onClick={()=>play(words.map(w=>w.en),opt)}>🔊 播放全部單字發音</button>
